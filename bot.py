@@ -5,10 +5,10 @@ import requests
 import os
 
 # Configura i token
-TELEGRAM_BOT_TOKEN = "7571820538:AAGyR1XRN45bfZeDJKK8oMY_lQaPKGnzPzc"
-OPENAI_API_KEY = "INSERISCI_LA_TUA_API_KEY_OPENAI"
-REPLICATE_API_URL = "https://api.replicate.com/v1/predictions"
-REPLICATE_API_TOKEN = "INSERISCI_IL_TUO_TOKEN_REPLICATE"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+REPLICATE_API_URL = os.getenv("REPLICATE_API_URL")
+REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
 # Configura il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
