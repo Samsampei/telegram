@@ -10,6 +10,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 REPLICATE_API_URL = os.getenv("REPLICATE_API_URL")
 REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
+# Imposta il webhook
+bot.set_webhook(url="https://telegram-2m17.onrender.com")
+
 # Configura il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
