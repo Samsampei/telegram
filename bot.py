@@ -1,5 +1,5 @@
 import telegram
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import openai
 import requests
 import os
@@ -46,15 +46,13 @@ def generate_image(update, context):
         update.message.reply_text("Errore nella generazione dell'immagine.")
 
 def main():
-    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, chat))
-    dp.add_handler(CommandHandler("img", generate_image))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    application.add_handler(CommandHandler("img", generate_image))
 
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
