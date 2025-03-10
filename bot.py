@@ -29,12 +29,13 @@ application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 def webhook():
     try:
         # Log dei dati ricevuti
-        app.logger.info(f"Ricevuto corpo della richiesta: {request.get_data()}")
-        
+        update_json = request.get_json(force=True)
+        app.logger.info(f"Ricevuto update: {update_json}")  # Stampa il JSON ricevuto
+
         # Processa l'update
-        update = telegram.Update.de_json(request.get_json(force=True), bot)
-        app.logger.info(f"Ricevuto update: {update}")
-        
+        update = telegram.Update.de_json(update_json, bot)
+        app.logger.info(f"Update convertito: {update}")
+
         # Gestisci l'update
         application.process_update(update)
         return 'OK', 200
