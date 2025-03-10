@@ -3,9 +3,7 @@ import telegram
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
-import requests
 import os
-import asyncio  # Per la gestione asincrona
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -29,19 +27,17 @@ application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 def test():
     return "Server Flask attivo e funzionante!", 200
 
-# Funzione asincrona per processare gli update
-async def process_update_async(update):
-    # Assicurati che l'applicazione sia inizializzata
-    if not application.running:
-        await application.initialize()  
-    await application.process_update(update)
-
 # Funzione per gestire i messaggi del webhook
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
-        asyncio.run(process_update_async(update))  # Esegui l'aggiornamento asincrono
+        # Log per verificare cosa viene ricevuto dal webhook
+        app.logger.info(f"Update ricevuto: {update.to_dict()}")
+
+        # Esegui la gestione dell'update
+        application.process_update(update)
+
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Errore durante il processamento del webhook: {str(e)}")
@@ -54,13 +50,11 @@ async def start(update: Update, context):
 # Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
-    
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_text}]
         )
-        
         reply_text = response['choices'][0]['message']['content']
         await update.message.reply_text(reply_text)
     except Exception as e:
