@@ -6,6 +6,7 @@ from quart import Quart, request
 import os
 import asyncio
 import logging
+import signal
 
 # Configura il logging
 logging.basicConfig(level=logging.DEBUG)
@@ -35,10 +36,16 @@ async def create_application():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     logger.debug("Telegram Application initialized")
 
-# Endpoint root
-@app.route('/')
-async def index():
-    return "Server is running"
+# Funzione per gestire i segnali
+def handle_sigterm(signum, frame):
+    logger.info("Received SIGTERM, shutting down gracefully...")
+    # Eventuali operazioni di pulizia
+    if application:
+        logger.info("Shutting down the Telegram bot application.")
+        application.stop()
+
+# Associa il segnale SIGTERM al handler
+signal.signal(signal.SIGTERM, handle_sigterm)
 
 @app.route('/webhook', methods=['POST'])
 async def webhook():
@@ -52,6 +59,7 @@ async def webhook():
         logger.error(f"Error processing webhook: {str(e)}")
         return 'Internal Server Error', 500
 
+
 # Funzione /start
 async def start(update: Update, context):
     await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
@@ -60,21 +68,22 @@ async def start(update: Update, context):
 async def chat(update: Update, context):
     user_text = update.message.text
     try:
-        logger.debug(f"User input: {user_text}")  # Log dell'input dell'utente
+        logging.debug(f"User input: {user_text}")  # Log dell'input dell'utente
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_text}]
         )
 
-        logger.debug(f"OpenAI response: {response}")  # Log della risposta di OpenAI
+        logging.debug(f"OpenAI response: {response}")  # Log della risposta di OpenAI
 
         reply_text = response['choices'][0]['message']['content']
         await update.message.reply_text(reply_text)
 
     except Exception as e:
-        logger.error(f"Errore con OpenAI: {str(e)}")  # Log dell'errore in caso di problemi con OpenAI
+        logging.error(f"Errore con OpenAI: {str(e)}")  # Log dell'errore in caso di problemi con OpenAI
         await update.message.reply_text(f"Errore: {str(e)}")
+
 
 # Funzione principale
 def main():
@@ -84,6 +93,7 @@ def main():
 
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     # Imposta il webhook
