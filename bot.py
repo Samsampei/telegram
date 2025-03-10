@@ -17,26 +17,18 @@ openai.api_key = OPENAI_API_KEY
 # Configura Flask
 app = Flask(__name__)
 
-# Definisci una route di base
-@app.route('/')
-def home():
-    return "Server Flask attivo e funzionante!"
-
 # Configura il bot di Telegram
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
-# Crea l'applicazione globale per Telegram
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
-# Crea l'applicazione globale per Telegram
+# Crea l'applicazione globale per Telegram (inizializzazione corretta)
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 @app.route('/webhook', methods=['POST'])
-async def webhook():
+def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         print("Received update:", update)  # Debugging
-        await application.process_update(update)  # Usa await qui
+        application.process_update(update)
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Error processing webhook: {str(e)}")
@@ -50,23 +42,6 @@ async def start(update: Update, context):
 # Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
-    print(f"Messaggio ricevuto: {user_text}")  # Log per il messaggio ricevuto
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": user_text}]
-        )
-        reply_text = response['choices'][0]['message']['content']
-        print(f"Risposta di OpenAI: {reply_text}")  # Log per la risposta di OpenAI
-        await update.message.reply_text(reply_text)
-    except Exception as e:
-        print(f"Errore: {str(e)}")  # Log per errori
-        await update.message.reply_text(f"Errore: {str(e)}")
-
-
-# Funzione per rispondere con OpenAI (ChatGPT)
-async def chat(update: Update, context):
-    user_text = update.message.text
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -76,7 +51,6 @@ async def chat(update: Update, context):
         await update.message.reply_text(reply_text)
     except Exception as e:
         await update.message.reply_text(f"Errore: {str(e)}")
-
 
 # Funzione principale
 def main():
