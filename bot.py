@@ -53,22 +53,19 @@ async def start(update: Update, context):
     await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
 
 # Funzione per rispondere con OpenAI (ChatGPT)
+# Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
-    logger.debug(f"User message: {user_text}")  # Log del testo inviato dall'utente
     try:
-        logger.debug("Making request to OpenAI API...")  # Log prima di chiamare OpenAI
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_text}]
         )
-        logger.debug(f"OpenAI response: {response}")  # Log della risposta da OpenAI
-
         reply_text = response['choices'][0]['message']['content']
         await update.message.reply_text(reply_text)
     except Exception as e:
-        logger.error(f"Error with OpenAI API: {str(e)}")
         await update.message.reply_text(f"Errore: {str(e)}")
+
 
 # Funzione principale
 def main():
