@@ -23,18 +23,25 @@ app = Flask(__name__)
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Crea l'applicazione globale per Telegram
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()  # Assicurati di inizializzare correttamente
+application = None
 
 # Configura il logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+async def create_application():
+    """Funzione asincrona per creare l'applicazione Telegram"""
+    global application
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    logger.debug("Telegram Application initialized")
 
 @app.route('/webhook', methods=['POST'])
 async def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         logger.debug(f"Received update: {update}")  # Log dell'update ricevuto
-        await application.process_update(update)  # Aggiungi await per l'operazione asincrona
+        if application:
+            await application.process_update(update)  # Aggiungi await per l'operazione asincrona
         return 'OK', 200
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")
@@ -65,6 +72,10 @@ async def chat(update: Update, context):
 
 # Funzione principale
 def main():
+    # Inizializza l'applicazione Telegram asincrona
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(create_application())  # Assicurati che l'applicazione sia inizializzata
+
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
