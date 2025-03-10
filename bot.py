@@ -28,7 +28,7 @@ def webhook():
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         
         # Gestisci l'aggiornamento in arrivo
-        chat(update)
+        application.process_update(update)
         
         return 'OK', 200
     except Exception as e:
@@ -90,5 +90,16 @@ def main():
     application.run_polling()
 
 if __name__ == "__main__":
+    # Crea l'applicazione per Telegram
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    # Aggiungi i gestori
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    application.add_handler(CommandHandler("img", generate_image))
+
+    # Avvia il polling
+    application.run_polling()
+
     # Esegui il server Flask per il webhook
     app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
