@@ -25,22 +25,22 @@ bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 # Route di debug per verificare se il server Flask è attivo
-@app.route('/', methods=['GET'])
-def index():
-    return "Server Flask attivo e funzionante!", 200
-
-# Funzione per gestire i messaggi del webhook
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
+        # Log dei dati ricevuti
+        app.logger.info(f"Ricevuto corpo della richiesta: {request.get_data()}")
+        
+        # Processa l'update
         update = telegram.Update.de_json(request.get_json(force=True), bot)
+        app.logger.info(f"Ricevuto update: {update}")
+        
+        # Gestisci l'update
         application.process_update(update)
         return 'OK', 200
     except Exception as e:
-        app.logger.error(f"Error processing webhook: {str(e)}")
+        app.logger.error(f"Errore durante il processamento del webhook: {str(e)}")
         return 'Internal Server Error', 500
-
-
 
 # Funzione start
 async def start(update: Update, context):
