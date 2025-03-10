@@ -21,7 +21,7 @@ app = Flask(__name__)
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Crea l'applicazione globale per Telegram
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+application = Application.builder().token(<token>).build()
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
