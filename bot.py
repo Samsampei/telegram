@@ -6,8 +6,10 @@ from quart import Quart, request
 import os
 import asyncio
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
+# Configura il logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -26,10 +28,6 @@ bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Crea l'applicazione globale per Telegram
 application = None
-
-# Configura il logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 async def create_application():
     """Funzione asincrona per creare l'applicazione Telegram"""
@@ -52,16 +50,16 @@ async def webhook():
 
 # Funzione /start
 async def start(update: Update, context):
+    logger.debug("Processing /start command")
     await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
 
 # Funzione per rispondere con OpenAI (ChatGPT)
-# Funzione per rispondere con OpenAI (ChatGPT)
-# Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
-    try:
-        logging.debug(f"User input: {user_text}")  # Log dell'input dell'utente
+    logger.debug(f"User input: {user_text}")  # Log dell'input dell'utente
 
+    try:
+        logging.debug("Inizio della chiamata a OpenAI")
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_text}]
@@ -86,12 +84,13 @@ def main():
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     # Imposta il webhook
+    logger.debug("Impostando il webhook di Telegram")
     bot.set_webhook(url="https://telegram-2m17.onrender.com/webhook")
 
     # Avvia il server Quart
+    logger.debug("Avviando il server Quart")
     app.run(host="0.0.0.0", port=5000)
 
 # Avvia il bot
