@@ -28,20 +28,18 @@ application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        # Log dei dati ricevuti
         update_json = request.get_json(force=True)
-        app.logger.info(f"Ricevuto update: {update_json}")  # Stampa il JSON ricevuto
-
-        # Processa l'update
+        app.logger.info(f"🔹 Update ricevuto: {update_json}")  # Log dettagliato dell'update
+        
         update = telegram.Update.de_json(update_json, bot)
-        app.logger.info(f"Update convertito: {update}")
-
-        # Gestisci l'update
-        application.process_update(update)
+        application.process_update(update)  # Invia l'update al bot
+        
+        app.logger.info("✅ Update processato con successo")
         return 'OK', 200
     except Exception as e:
-        app.logger.error(f"Errore durante il processamento del webhook: {str(e)}")
+        app.logger.error(f"❌ Errore webhook: {str(e)}")
         return 'Internal Server Error', 500
+
 
 # Funzione start
 async def start(update: Update, context):
