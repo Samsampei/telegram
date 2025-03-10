@@ -26,8 +26,6 @@ application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 # Funzione per gestire i messaggi del webhook
 @app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
-def home():
-    return "Server is running!"
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
@@ -89,10 +87,4 @@ def main():
     application.add_handler(CommandHandler("img", generate_image))
 
     # Imposta il webhook
-    bot.set_webhook(url="https://telegram-2m17.onrender.com/" + TELEGRAM_BOT_TOKEN)
-
-    # Esegui il server Flask per il webhook
-    app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
-
-if __name__ == "__main__":
-    main()
+    bot.set_webhook(url="https://telegram-2m17.o
