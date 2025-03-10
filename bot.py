@@ -5,7 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
 import requests
 import os
-import asyncio  # Aggiunto per gestire le funzioni asincrone
+import asyncio  # Per la gestione asincrona
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -31,8 +31,9 @@ def test():
 
 # Funzione asincrona per processare gli update
 async def process_update_async(update):
+    # Assicurati che l'applicazione sia inizializzata
     if not application.running:
-        await application.initialize()  # Assicura che l'applicazione sia inizializzata
+        await application.initialize()  
     await application.process_update(update)
 
 # Funzione per gestire i messaggi del webhook
@@ -40,7 +41,7 @@ async def process_update_async(update):
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
-        asyncio.run(process_update_async(update))  # Esegue la funzione async correttamente
+        asyncio.run(process_update_async(update))  # Esegui l'aggiornamento asincrono
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Errore durante il processamento del webhook: {str(e)}")
@@ -65,27 +66,11 @@ async def chat(update: Update, context):
     except Exception as e:
         await update.message.reply_text(f"Errore: {str(e)}")
 
-# Funzione per generare immagini con Replicate
-async def generate_image(update: Update, context):
-    user_prompt = "una bellissima ragazza virtuale, stile anime, sfondo futuristico"
-    
-    headers = {"Authorization": f"Token {REPLICATE_API_TOKEN}"}
-    data = {"version": "latest", "input": {"prompt": user_prompt}}
-
-    response = requests.post(REPLICATE_API_URL, json=data, headers=headers)
-    
-    if response.status_code == 200:
-        image_url = response.json().get("output", [""])[0]
-        await update.message.reply_photo(photo=image_url)
-    else:
-        await update.message.reply_text("Errore nella generazione dell'immagine.")
-
 # Funzione principale
 def main():
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    application.add_handler(CommandHandler("img", generate_image))
 
     # Imposta il webhook
     bot.set_webhook(url="https://telegram-2m17.onrender.com/webhook")
