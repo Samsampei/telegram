@@ -2,6 +2,17 @@ import telegram
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
 import openai
+
+openai.api_key = OPENAI_API_KEY
+
+response = openai.Completion.create(
+    model="gpt-3.5-turbo",
+    prompt=user_text,
+    max_tokens=150
+)
+
+reply_text = response['choices'][0]['text']
+update.message.reply_text(reply_text)
 import requests
 import os
 
