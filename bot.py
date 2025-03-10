@@ -4,21 +4,44 @@ from flask import Flask, request
 import openai
 import os
 import requests
+import openai  # Aggiungi qui l'importazione di openai
 
-# Configura i token
+# Configura la chiave API di OpenAI
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Usa la variabile di ambiente per la chiave API
+
+# Configura i token di Telegram
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-REPLICATE_API_URL = os.getenv("REPLICATE_API_URL")
-REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
-# Usa la chiave API di OpenAI
-openai.api_key = OPENAI_API_KEY
+# Crea il bot Telegram
+bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+
+# Configura Flask
+app = Flask(__name__)
+
+# Definisci la funzione di chat che interagisce con OpenAI
+def chat(update, context):
+    user_text = update.message.text
+
+    # Usa la nuova interfaccia di OpenAI per ottenere la risposta
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": user_text}]
+    )
+
+    reply_text = response['choices'][0]['message']['content']
+    update.message.reply_text(reply_text)
 
 # Configura Flask
 app = Flask(__name__)
 
 # Configura il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+
+# Configura i token
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+REPLICATE_API_URL = os.getenv("REPLICATE_API_URL")
+REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
 # Funzione per gestire il webhook
 @app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
