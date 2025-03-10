@@ -4,3 +4,4 @@ gunicorn
 openai>=1.0.0
 requests
 quart
+uvicorn
