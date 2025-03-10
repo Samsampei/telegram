@@ -4,6 +4,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
 import os
+import asyncio
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -64,6 +65,11 @@ def main():
     # Avvia il server Flask
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+# Aggiungi una route di stato per il debug
+@app.route('/status')
+def status():
+    return "Server is up and running!"
 
 # Avvia il bot
 if __name__ == "__main__":
