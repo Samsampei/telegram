@@ -17,6 +17,11 @@ openai.api_key = OPENAI_API_KEY
 # Configura Flask
 app = Flask(__name__)
 
+# Definisci una route di base
+@app.route('/')
+def home():
+    return "Server Flask attivo e funzionante!"
+
 # Configura il bot di Telegram
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
