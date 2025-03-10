@@ -30,18 +30,16 @@ def index():
     return "Server Flask attivo e funzionante!", 200
 
 # Funzione per gestire i messaggi del webhook
-@app.route('/<string:bot_token>', methods=['POST'])
-def webhook(bot_token):
-    if bot_token == TELEGRAM_BOT_TOKEN:  # Verifica che il token corrisponda
-        try:
-            update = telegram.Update.de_json(request.get_json(force=True), bot)
-            application.process_update(update)
-            return 'OK', 200
-        except Exception as e:
-            app.logger.error(f"Error processing webhook: {str(e)}")
-            return 'Internal Server Error', 500
-    else:
-        return 'Forbidden', 403
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    try:
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        application.process_update(update)
+        return 'OK', 200
+    except Exception as e:
+        app.logger.error(f"Error processing webhook: {str(e)}")
+        return 'Internal Server Error', 500
+
 
 
 # Funzione start
