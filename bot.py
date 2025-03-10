@@ -48,6 +48,23 @@ async def start(update: Update, context):
 # Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
+    print(f"Messaggio ricevuto: {user_text}")  # Log per il messaggio ricevuto
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": user_text}]
+        )
+        reply_text = response['choices'][0]['message']['content']
+        print(f"Risposta di OpenAI: {reply_text}")  # Log per la risposta di OpenAI
+        await update.message.reply_text(reply_text)
+    except Exception as e:
+        print(f"Errore: {str(e)}")  # Log per errori
+        await update.message.reply_text(f"Errore: {str(e)}")
+
+
+# Funzione per rispondere con OpenAI (ChatGPT)
+async def chat(update: Update, context):
+    user_text = update.message.text
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
