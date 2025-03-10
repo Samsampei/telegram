@@ -20,15 +20,15 @@ app = Flask(__name__)
 # Configura il bot di Telegram
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
-# Crea l'applicazione globale per Telegram (inizializzazione corretta)
+# Crea l'applicazione globale per Telegram
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 @app.route('/webhook', methods=['POST'])
-def webhook():
+async def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         print("Received update:", update)  # Debugging
-        application.process_update(update)
+        await application.process_update(update)  # Aggiungi await per l'operazione asincrona
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Error processing webhook: {str(e)}")
@@ -63,8 +63,7 @@ def main():
 
     # Avvia il server Flask
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
-
+    app.run(host="0.0.0.0", port=port)
 
 # Avvia il bot
 if __name__ == "__main__":
