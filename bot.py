@@ -35,6 +35,11 @@ async def create_application():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     logger.debug("Telegram Application initialized")
 
+# Endpoint root
+@app.route('/')
+async def index():
+    return "Server is running"
+
 @app.route('/webhook', methods=['POST'])
 async def webhook():
     try:
@@ -47,33 +52,29 @@ async def webhook():
         logger.error(f"Error processing webhook: {str(e)}")
         return 'Internal Server Error', 500
 
-
 # Funzione /start
 async def start(update: Update, context):
-    logger.debug("Processing /start command")
     await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
 
 # Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
-    logger.debug(f"User input: {user_text}")  # Log dell'input dell'utente
-
     try:
-        logging.debug("Inizio della chiamata a OpenAI")
+        logger.debug(f"User input: {user_text}")  # Log dell'input dell'utente
+
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_text}]
         )
 
-        logging.debug(f"OpenAI response: {response}")  # Log della risposta di OpenAI
+        logger.debug(f"OpenAI response: {response}")  # Log della risposta di OpenAI
 
         reply_text = response['choices'][0]['message']['content']
         await update.message.reply_text(reply_text)
 
     except Exception as e:
-        logging.error(f"Errore con OpenAI: {str(e)}")  # Log dell'errore in caso di problemi con OpenAI
+        logger.error(f"Errore con OpenAI: {str(e)}")  # Log dell'errore in caso di problemi con OpenAI
         await update.message.reply_text(f"Errore: {str(e)}")
-
 
 # Funzione principale
 def main():
@@ -86,11 +87,9 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     # Imposta il webhook
-    logger.debug("Impostando il webhook di Telegram")
     bot.set_webhook(url="https://telegram-2m17.onrender.com/webhook")
 
     # Avvia il server Quart
-    logger.debug("Avviando il server Quart")
     app.run(host="0.0.0.0", port=5000)
 
 # Avvia il bot
