@@ -2,7 +2,7 @@ import openai
 import telegram
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
-from flask import Flask, request
+from quart import Quart, request
 import os
 import asyncio
 import logging
@@ -16,8 +16,8 @@ REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 # Imposta la chiave API di OpenAI
 openai.api_key = OPENAI_API_KEY
 
-# Configura Flask
-app = Flask(__name__)
+# Configura Quart
+app = Quart(__name__)
 
 # Configura il bot di Telegram
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
@@ -38,7 +38,7 @@ async def create_application():
 @app.route('/webhook', methods=['POST'])
 async def webhook():
     try:
-        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        update = telegram.Update.de_json(await request.get_json(force=True), bot)
         logger.debug(f"Received update: {update}")  # Log dell'update ricevuto
         if application:
             await application.process_update(update)  # Aggiungi await per l'operazione asincrona
@@ -74,7 +74,7 @@ async def chat(update: Update, context):
 def main():
     # Inizializza l'applicazione Telegram asincrona
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(create_application())  # Assicurati che l'applicazione sia inizializzata
+    loop.run_until_complete(create_application())  # Assicurati che l'applicazione sia completamente inizializzata
 
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
@@ -83,9 +83,8 @@ def main():
     # Imposta il webhook
     bot.set_webhook(url="https://telegram-2m17.onrender.com/webhook")
 
-    # Avvia il server Flask
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    # Avvia il server Quart
+    app.run(host="0.0.0.0", port=5000)
 
 # Avvia il bot
 if __name__ == "__main__":
