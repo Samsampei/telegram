@@ -17,20 +17,32 @@ REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 # Crea il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
+# Gestione del webhook
 @app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
-        application.update_queue.put(update)
+        # Qui gestiamo l'update direttamente, senza fare uso di "application"
+        handle_update(update)
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Error processing webhook: {str(e)}")
         return 'Internal Server Error', 500
 
-def start(update, context):
+# Funzione che gestisce l'update (questa può essere personalizzata)
+def handle_update(update):
+    # Qui puoi gestire i vari tipi di messaggi ricevuti dal bot
+    if update.message.text == "/start":
+        start(update)
+    elif update.message.text.startswith("/img"):
+        generate_image(update)
+    else:
+        chat(update)
+
+def start(update):
     update.message.reply_text("Ciao! Sono una ragazza virtuale. Scrivimi qualcosa!")
 
-def chat(update, context):
+def chat(update):
     user_text = update.message.text
     openai.api_key = OPENAI_API_KEY
 
@@ -42,31 +54,8 @@ def chat(update, context):
     reply_text = response["choices"][0]["message"]["content"]
     update.message.reply_text(reply_text)
 
-def generate_image(update, context):
+def generate_image(update):
     user_prompt = "una bellissima ragazza virtuale, stile anime, sfondo futuristico"
     
-    headers = {"Authorization": f"Token {REPLICATE_API_TOKEN}"}
-    data = {
-        "version": "latest",
-        "input": {"prompt": user_prompt}
-    }
+    headers = {"Authorization": f"Token {REPLICATE_API_
 
-    response = requests.post(REPLICATE_API_URL, json=data, headers=headers)
-    
-    if response.status_code == 200:
-        image_url = response.json().get("output", [""])[0]
-        update.message.reply_photo(photo=image_url)
-    else:
-        update.message.reply_text("Errore nella generazione dell'immagine.")
-
-def main():
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    application.add_handler(CommandHandler("img", generate_image))
-
-    application.run_polling()
-
-if __name__ == "__main__":
-    main()
