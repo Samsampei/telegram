@@ -6,6 +6,8 @@ from quart import Quart, request
 import os
 import asyncio
 import logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -54,16 +56,24 @@ async def start(update: Update, context):
 
 # Funzione per rispondere con OpenAI (ChatGPT)
 # Funzione per rispondere con OpenAI (ChatGPT)
+# Funzione per rispondere con OpenAI (ChatGPT)
 async def chat(update: Update, context):
     user_text = update.message.text
     try:
+        logging.debug(f"User input: {user_text}")  # Log dell'input dell'utente
+
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_text}]
         )
+
+        logging.debug(f"OpenAI response: {response}")  # Log della risposta di OpenAI
+
         reply_text = response['choices'][0]['message']['content']
         await update.message.reply_text(reply_text)
+
     except Exception as e:
+        logging.error(f"Errore con OpenAI: {str(e)}")  # Log dell'errore in caso di problemi con OpenAI
         await update.message.reply_text(f"Errore: {str(e)}")
 
 
@@ -75,6 +85,7 @@ def main():
 
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     # Imposta il webhook
