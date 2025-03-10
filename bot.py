@@ -80,6 +80,7 @@ def generate_image(update, context):
     else:
         update.message.reply_text("Errore nella generazione dell'immagine.")
 
+# Funzione principale
 def main():
     # Aggiungi i gestori
     application.add_handler(CommandHandler("start", start))
@@ -89,8 +90,10 @@ def main():
     # Imposta il webhook
     bot.set_webhook(url=f"https://telegram-2m17.onrender.com/{TELEGRAM_BOT_TOKEN}")
 
-    # Esegui il server Flask per il webhook
-    app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
+    # Avvia il server Flask (porta dinamica)
+    port = int(os.environ.get("PORT", 5000))  # Usa la porta da ambiente o 5000
+    app.run(host="0.0.0.0", port=port)  # Ascolta su tutte le interfacce
 
+# Esegui il programma
 if __name__ == "__main__":
     main()
