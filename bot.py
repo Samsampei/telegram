@@ -31,6 +31,8 @@ def test():
 
 # Funzione asincrona per processare gli update
 async def process_update_async(update):
+    if not application.running:
+        await application.initialize()  # Assicura che l'applicazione sia inizializzata
     await application.process_update(update)
 
 # Funzione per gestire i messaggi del webhook
