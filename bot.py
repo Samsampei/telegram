@@ -1,8 +1,9 @@
 import telegram
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from flask import Flask, request
 import openai
-import os
 import requests
+import os
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -10,27 +11,43 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 REPLICATE_API_URL = os.getenv("REPLICATE_API_URL")
 REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
-# Configura la chiave API di OpenAI
+# Imposta la chiave API di OpenAI
 openai.api_key = OPENAI_API_KEY
 
-# Crea il bot Telegram
+# Configura Flask
+app = Flask(__name__)
+
+# Configura il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
-# Funzione di chat aggiornata per la versione >= 1.0.0
-def chat(update, context):
-    user_text = update.message.text
+# Imposta il webhook
+@app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
+def webhook():
+    try:
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        
+        # Gestisci l'aggiornamento in arrivo
+        chat(update)
+        
+        return 'OK', 200
+    except Exception as e:
+        app.logger.error(f"Error processing webhook: {str(e)}")
+        return 'Internal Server Error', 500
 
-    # Usa la nuova interfaccia di OpenAI
+def start(update, context):
+    update.message.reply_text("Ciao! Sono una ragazza virtuale. Scrivimi qualcosa!")
+
+def chat(update, context=None):
+    user_text = update.message.text
+    
+    # Usa la nuova API per la chat con OpenAI
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": user_text}]  # Messaggio del cliente
+        model="gpt-3.5-turbo",  # Specifica il modello di chat
+        messages=[{"role": "user", "content": user_text}]
     )
 
     reply_text = response['choices'][0]['message']['content']
     update.message.reply_text(reply_text)
-
-def start(update, context):
-    update.message.reply_text("Ciao! Sono una ragazza virtuale. Scrivimi qualcosa!")
 
 def generate_image(update, context):
     user_prompt = "una bellissima ragazza virtuale, stile anime, sfondo futuristico"
@@ -50,16 +67,16 @@ def generate_image(update, context):
         update.message.reply_text("Errore nella generazione dell'immagine.")
 
 def main():
-    # Crea l'applicazione Telegram
+    # Crea l'applicazione per Telegram
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Aggiungi i gestori
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))  # Gestisci i messaggi di testo con la funzione chat
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     application.add_handler(CommandHandler("img", generate_image))
 
     # Avvia il polling
     application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
