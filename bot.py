@@ -46,10 +46,13 @@ def webhook(bot_token):
 
 # Funzione start
 async def start(update: Update, context):
+    print("Funzione start chiamata")  # Debug
     await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
+
 
 # Funzione per rispondere con OpenAI (usando la nuova API)
 async def chat(update: Update, context):
+    print("Funzione chat chiamata con messaggio:", update.message.text)  # Debug
     user_text = update.message.text  # Il testo che l'utente invia al bot
     
     try:
@@ -65,7 +68,7 @@ async def chat(update: Update, context):
         # Rispondi all'utente
         await update.message.reply_text(reply_text)
     except Exception as e:
-        # Gestione degli errori
+        print("Errore nella funzione chat:", e)  # Debug
         await update.message.reply_text(f"Errore: {str(e)}")
 
 # Funzione per generare l'immagine tramite Replicate
