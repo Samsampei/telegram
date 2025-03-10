@@ -21,11 +21,12 @@ app = Flask(__name__)
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Crea l'applicazione globale per Telegram
-application = Application.builder().token(<token>).build()
+application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
+        # Elenco di debug per ricevere aggiornamenti
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         print("Received update:", update)  # Debugging
         application.process_update(update)
@@ -51,6 +52,7 @@ async def chat(update: Update, context):
         await update.message.reply_text(reply_text)
     except Exception as e:
         await update.message.reply_text(f"Errore: {str(e)}")
+
 
 # Funzione principale
 def main():
