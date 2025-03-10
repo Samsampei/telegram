@@ -87,4 +87,4 @@ def main():
     application.add_handler(CommandHandler("img", generate_image))
 
     # Imposta il webhook
-    bot.set_webhook(url="https://telegram-2m17.o
+   bot.set_webhook(url="https://telegram-2m17.onrender.com/" + TELEGRAM_BOT_TOKEN)
