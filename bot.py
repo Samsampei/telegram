@@ -87,4 +87,10 @@ def main():
     application.add_handler(CommandHandler("img", generate_image))
 
     # Imposta il webhook
-   bot.set_webhook(url="https://telegram-2m17.onrender.com/" + TELEGRAM_BOT_TOKEN)
+    bot.set_webhook(url=f"https://telegram-2m17.onrender.com/{TELEGRAM_BOT_TOKEN}")
+
+    # Esegui il server Flask per il webhook
+    app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
+
+if __name__ == "__main__":
+    main()
