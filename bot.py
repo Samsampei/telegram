@@ -1,7 +1,8 @@
+import openai
 import telegram
+from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
-import openai
 import requests
 import os
 
@@ -20,7 +21,7 @@ app = Flask(__name__)
 # Configura il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
-# Imposta il webhook
+# Funzione per gestire i messaggi del webhook
 @app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
 def webhook():
     try:
@@ -34,21 +35,31 @@ def webhook():
         app.logger.error(f"Error processing webhook: {str(e)}")
         return 'Internal Server Error', 500
 
-def start(update, context):
-    update.message.reply_text("Ciao! Sono una ragazza virtuale. Scrivimi qualcosa!")
+# Funzione start
+async def start(update: Update, context):
+    await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
 
-def chat(update, context=None):
-    user_text = update.message.text
+# Funzione per rispondere con OpenAI (usando la nuova API)
+async def chat(update: Update, context):
+    user_text = update.message.text  # Il testo che l'utente invia al bot
     
-    # Usa la nuova API per la chat con OpenAI
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # Specifica il modello di chat
-        messages=[{"role": "user", "content": user_text}]
-    )
+    try:
+        # Richiesta alla API di OpenAI con il modello ChatGPT
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Usa il modello GPT-3.5 turbo
+            messages=[{"role": "user", "content": user_text}]  # Passa il messaggio dell'utente
+        )
+        
+        # Ottieni la risposta dal modello
+        reply_text = response['choices'][0]['message']['content']
+        
+        # Rispondi all'utente
+        await update.message.reply_text(reply_text)
+    except Exception as e:
+        # Gestione degli errori
+        await update.message.reply_text(f"Errore: {str(e)}")
 
-    reply_text = response['choices'][0]['message']['content']
-    update.message.reply_text(reply_text)
-
+# Funzione per generare l'immagine tramite Replicate
 def generate_image(update, context):
     user_prompt = "una bellissima ragazza virtuale, stile anime, sfondo futuristico"
     
@@ -79,4 +90,5 @@ def main():
     application.run_polling()
 
 if __name__ == "__main__":
+    # Esegui il server Flask per il webhook
     app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
