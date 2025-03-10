@@ -5,7 +5,6 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
 import requests
 import os
-import asyncio
 
 # Configura i token
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -25,23 +24,21 @@ bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 # Crea l'applicazione globale per Telegram
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-@app.route('/test', methods=['GET'])
-def test():
-    return "Server Flask è attivo!", 200
+# Route di debug per verificare se il server Flask è attivo
+@app.route('/', methods=['GET'])
+def index():
+    return "Server Flask attivo e funzionante!", 200
 
 # Funzione per gestire i messaggi del webhook
-@app.route('/<string:bot_token>', methods=['POST'])
-def webhook(bot_token):
-    if bot_token == TELEGRAM_BOT_TOKEN:  # Verifica che il token corrisponda
-        try:
-            update = telegram.Update.de_json(request.get_json(force=True), bot)
-            application.process_update(update)
-            return 'OK', 200
-        except Exception as e:
-            app.logger.error(f"Error processing webhook: {str(e)}")
-            return 'Internal Server Error', 500
-    else:
-        return 'Forbidden', 403
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    try:
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        application.process_update(update)
+        return 'OK', 200
+    except Exception as e:
+        app.logger.error(f"Error processing webhook: {str(e)}")
+        return 'Internal Server Error', 500
 
 # Funzione start
 async def start(update: Update, context):
@@ -85,19 +82,15 @@ def generate_image(update, context):
     else:
         update.message.reply_text("Errore nella generazione dell'immagine.")
 
-# Funzione asincrona per impostare il webhook
-async def set_webhook():
-    await bot.set_webhook(url=f"https://telegram-2m17.onrender.com/{TELEGRAM_BOT_TOKEN}")
-
 # Funzione principale
-async def main():
-    # Imposta il webhook
-    await set_webhook()
-
+def main():
     # Aggiungi i gestori
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     application.add_handler(CommandHandler("img", generate_image))
+
+    # Imposta il webhook
+    bot.set_webhook(url=f"https://telegram-2m17.onrender.com/webhook")
 
     # Avvia il server Flask (porta dinamica)
     port = int(os.environ.get("PORT", 5000))  # Usa la porta da ambiente o 5000
@@ -105,4 +98,4 @@ async def main():
 
 # Esegui il programma
 if __name__ == "__main__":
-    asyncio.run(main())  # Usa asyncio per eseguire il main
+    main()
