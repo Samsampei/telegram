@@ -3,3 +3,4 @@ python-telegram-bot==20.0
 gunicorn
 openai>=1.0.0
 requests
+flask[async]
