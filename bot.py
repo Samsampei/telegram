@@ -21,13 +21,20 @@ app = Flask(__name__)
 # Configura il bot
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
-@app.route('/')
+# Crea l'applicazione globale per Telegram
+application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+# Funzione per gestire i messaggi del webhook
+@app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
 def home():
     return "Server is running!"
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
+        
+        # Usa l'oggetto application per processare l'update
         application.process_update(update)
+        
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Error processing webhook: {str(e)}")
@@ -76,11 +83,6 @@ def generate_image(update, context):
         update.message.reply_text("Errore nella generazione dell'immagine.")
 
 def main():
-    global application  # Rendi `application` una variabile globale
-
-    # Crea l'applicazione per Telegram
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
     # Aggiungi i gestori
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
@@ -88,7 +90,6 @@ def main():
 
     # Imposta il webhook
     bot.set_webhook(url="https://telegram-2m17.onrender.com/" + TELEGRAM_BOT_TOKEN)
-
 
     # Esegui il server Flask per il webhook
     app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
