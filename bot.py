@@ -28,13 +28,15 @@ bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 # Crea l'applicazione globale per Telegram
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
+# Crea l'applicazione globale per Telegram
+application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
 @app.route('/webhook', methods=['POST'])
-def webhook():
+async def webhook():
     try:
-        # Elenco di debug per ricevere aggiornamenti
         update = telegram.Update.de_json(request.get_json(force=True), bot)
         print("Received update:", update)  # Debugging
-        application.process_update(update)
+        await application.process_update(update)  # Usa await qui
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Error processing webhook: {str(e)}")
