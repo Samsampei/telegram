@@ -71,35 +71,4 @@ def generate_image(update, context):
 
     response = requests.post(REPLICATE_API_URL, json=data, headers=headers)
     
-    if response.status_code == 200:
-        image_url = response.json().get("output", [""])[0]
-        update.message.reply_photo(photo=image_url)
-    else:
-        update.message.reply_text("Errore nella generazione dell'immagine.")
-
-def main():
-    # Crea l'applicazione per Telegram
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
-    # Aggiungi i gestori
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    application.add_handler(CommandHandler("img", generate_image))
-
-    # Avvia il polling
-    application.run_polling()
-
-if __name__ == "__main__":
-    # Crea l'applicazione per Telegram
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    
-    # Aggiungi i gestori
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    application.add_handler(CommandHandler("img", generate_image))
-
-    # Avvia il polling
-    application.run_polling()
-
-    # Esegui il server Flask per il webhook
-    app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
+    if response.status_code == 2
