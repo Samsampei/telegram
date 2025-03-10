@@ -19,10 +19,13 @@ bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 @app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
 def webhook():
-    update = telegram.Update.de_json(request.get_json(force=True), bot)
-    # Gestisci gli aggiornamenti (messaggi)
-    application.update_queue.put(update)
-    return 'OK', 200
+    try:
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        application.update_queue.put(update)
+        return 'OK', 200
+    except Exception as e:
+        app.logger.error(f"Error processing webhook: {str(e)}")
+        return 'Internal Server Error', 500
 
 def start(update, context):
     update.message.reply_text("Ciao! Sono una ragazza virtuale. Scrivimi qualcosa!")
