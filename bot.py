@@ -22,7 +22,7 @@ app = Flask(__name__)
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Crea l'applicazione globale per Telegram
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()  # Assicurati di inizializzare correttamente
 
 @app.route('/webhook', methods=['POST'])
 async def webhook():
@@ -57,20 +57,3 @@ async def chat(update: Update, context):
 def main():
     # Aggiungi i gestori di comandi
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-
-    # Imposta il webhook
-    bot.set_webhook(url="https://telegram-2m17.onrender.com/webhook")
-
-    # Avvia il server Flask
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-
-# Aggiungi una route di stato per il debug
-@app.route('/status')
-def status():
-    return "Server is up and running!"
-
-# Avvia il bot
-if __name__ == "__main__":
-    main()
