@@ -29,15 +29,12 @@ def test():
     return "Server Flask è attivo!", 200
 
 # Funzione per gestire i messaggi del webhook
-@app.route(f'/{TELEGRAM_BOT_TOKEN}', methods=['POST'])
-
+@app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
-        
-        # Usa l'oggetto application per processare l'update
+        # Gestisci il messaggio
         application.process_update(update)
-        
         return 'OK', 200
     except Exception as e:
         app.logger.error(f"Error processing webhook: {str(e)}")
