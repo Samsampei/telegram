@@ -45,10 +45,50 @@ async def chat(update: Update, context):
     
     try:
         # Richiesta alla API di OpenAI con il modello ChatGPT
-        response = openai.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Usa il modello GPT-3.5 turbo
             messages=[{"role": "user", "content": user_text}]  # Passa il messaggio dell'utente
         )
         
         # Ottieni la risposta dal modello
-        reply_text = response['choices'][0]['message']['con
+        reply_text = response['choices'][0]['message']['content']
+        
+        # Rispondi all'utente
+        await update.message.reply_text(reply_text)
+    except Exception as e:
+        # Gestione degli errori
+        await update.message.reply_text(f"Errore: {str(e)}")
+
+# Funzione per generare l'immagine tramite Replicate
+def generate_image(update, context):
+    user_prompt = "una bellissima ragazza virtuale, stile anime, sfondo futuristico"
+    
+    headers = {"Authorization": f"Token {REPLICATE_API_TOKEN}"}
+    data = {
+        "version": "latest",
+        "input": {"prompt": user_prompt}
+    }
+
+    response = requests.post(REPLICATE_API_URL, json=data, headers=headers)
+    
+    if response.status_code == 200:
+        image_url = response.json().get("output", [""])[0]
+        update.message.reply_photo(photo=image_url)
+    else:
+        update.message.reply_text("Errore nella generazione dell'immagine.")
+
+def main():
+    # Crea l'applicazione per Telegram
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # Aggiungi i gestori
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    application.add_handler(CommandHandler("img", generate_image))
+
+    # Avvia il polling
+    application.run_polling()
+
+if __name__ == "__main__":
+    # Esegui il server Flask per il webhook
+    app.run(host="0.0.0.0", port=5000)  # Esegui il server Flask
