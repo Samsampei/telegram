@@ -24,8 +24,13 @@ bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 # Crea l'applicazione globale per Telegram
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
+@app.route('/test', methods=['GET'])
+def test():
+    return "Server Flask è attivo!", 200
+
 # Funzione per gestire i messaggi del webhook
-@app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
+@app.route(f'/{TELEGRAM_BOT_TOKEN}', methods=['POST'])
+
 def webhook():
     try:
         update = telegram.Update.de_json(request.get_json(force=True), bot)
