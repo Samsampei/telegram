@@ -26,7 +26,7 @@ openai.api_key = OPENAI_API_KEY
 # Configura Quart
 app = Quart(__name__)
 
-# 🔥 **Inizializza subito `application`**
+# 🔥 **Inizializza l'applicazione una volta sola**
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 @app.route("/", methods=["GET"])
@@ -35,15 +35,13 @@ async def home():
 
 @app.route('/webhook', methods=['POST'])
 async def webhook():
-    global application
+    """Gestisce gli aggiornamenti di Telegram"""
     try:
         update_json = await request.get_json()
         update = Update.de_json(update_json, application.bot)
         logger.debug(f"Received update: {update}")
 
-        if not application.running:
-            await application.initialize()
-
+        # ❌ **Non chiamiamo più initialize() qui!**
         await application.process_update(update)
         return 'OK', 200
     except Exception as e:
@@ -73,14 +71,12 @@ async def chat(update: Update, context):
 def shutdown_handler(signum, frame):
     logger.info("Spegnimento in corso...")
     asyncio.create_task(application.shutdown())
-    os._exit(0)
 
 signal.signal(signal.SIGTERM, shutdown_handler)
 
 # Funzione principale
 async def main():
-    global application
-
+    """Configura l'applicazione e avvia Quart"""
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     
@@ -89,9 +85,9 @@ async def main():
     await application.initialize()
     await application.bot.set_webhook(url=webhook_url)
     logger.info(f"Webhook impostato su {webhook_url}")
-    
-    # Avvia Quart
-    app.run(host="0.0.0.0", port=5000)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# 🔥 **Avvia `main()` senza bloccare il loop**
+asyncio.create_task(main())
+
+# Avvia Quart (Render lo tiene attivo)
+app.run(host="0.0.0.0", port=5000)
