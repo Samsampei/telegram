@@ -76,15 +76,19 @@ signal.signal(signal.SIGTERM, shutdown_handler)
 
 # Funzione principale
 async def main():
-    """Configura l'applicazione e avvia Quart"""
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    
-    # Imposta il webhook
+
     webhook_url = "https://telegram-2m17.onrender.com/webhook"
     await application.initialize()
     await application.bot.set_webhook(url=webhook_url)
     logger.info(f"Webhook impostato su {webhook_url}")
+
+    # Avvia il server Quart senza bloccare il loop
+    config = uvicorn.Config(app, host="0.0.0.0", port=5000, loop="asyncio")
+    server = uvicorn.Server(config)
+    await server.serve()
+
 
 # 🔥 **Avvia `main()` senza bloccare il loop**
 asyncio.create_task(main())
@@ -96,8 +100,8 @@ import uvicorn
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())  # Assicura che il bot venga avviato correttamente
 
-    # Avvia il server web
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
 
