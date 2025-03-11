@@ -1,7 +1,7 @@
-flask
-python-telegram-bot==20.0
+quart
 gunicorn
+uvicorn
 openai>=1.0.0
 requests
-quart
-uvicorn
+python-telegram-bot>=20.7
+httpx
