@@ -6,8 +6,8 @@ from quart import Quart, request
 import os
 import asyncio
 import logging
-import signal
 import uvicorn
+import signal
 
 # Configura il logging
 logging.basicConfig(level=logging.DEBUG)
@@ -27,7 +27,7 @@ openai.api_key = OPENAI_API_KEY
 # Configura Quart
 app = Quart(__name__)
 
-# Inizializza il bot Telegram
+# 🔥 **Inizializza l'applicazione una sola volta**
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 @app.route("/", methods=["GET"])
@@ -48,11 +48,11 @@ async def webhook():
         logger.error(f"Error processing webhook: {str(e)}")
         return 'Internal Server Error', 500
 
-# Comando /start
+# Funzione /start
 async def start(update: Update, context):
     await update.message.reply_text("Ciao! Sono un bot con intelligenza artificiale. Scrivimi qualcosa!")
 
-# Risponde con OpenAI
+# Funzione per rispondere con OpenAI
 async def chat(update: Update, context):
     user_text = update.message.text
     try:
@@ -67,22 +67,32 @@ async def chat(update: Update, context):
         logging.error(f"Errore con OpenAI: {str(e)}")  
         await update.message.reply_text(f"Errore: {str(e)}")
 
+# Gestore dei segnali per Render
+def shutdown_handler(signum, frame):
+    logger.info("Spegnimento in corso...")
+    asyncio.create_task(application.shutdown())
+
+signal.signal(signal.SIGTERM, shutdown_handler)
+
 # Funzione principale
 async def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     webhook_url = "https://telegram-2m17.onrender.com/webhook"
-    await application.initialize()  # 👈 AGGIUNGI QUESTA RIGA!
+
+    await application.initialize()
+    await application.bot.set_webhook(url=webhook_url)
     await application.start()
-    await application.updater.start_polling()  # 👈 Usa Polling per test locale (evita webhook)
-    await application.stop()
+    
     logger.info(f"Webhook impostato su {webhook_url}")
 
-    # Avvia Quart con Hypercorn
-    config = uvicorn.Config(app, host="0.0.0.0", port=5000, loop="asyncio")
-    server = uvicorn.Server(config)
-    await server.serve()
-
+# Avvia tutto
 if __name__ == "__main__":
-    asyncio.run(main())  # Usa asyncio.run per avviare correttamente l'event loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    loop.run_until_complete(main())
+
+    # Avvia il server Quart con Uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
