@@ -2,7 +2,6 @@ import openai
 import os
 import asyncio
 import logging
-import signal
 import uvicorn
 from quart import Quart, request
 from telegram import Update
@@ -64,31 +63,25 @@ async def webhook():
 async def home():
     return "Bot Telegram attivo! 🚀", 200
 
-# 🔹 Gestione della chiusura
-def shutdown_handler(signum, frame):
-    logger.info("Chiusura in corso...")
-    asyncio.create_task(application.shutdown())
-
-signal.signal(signal.SIGTERM, shutdown_handler)
-
-# 🔹 Funzione principale
-async def main():
+# 🔹 Funzione principale per inizializzare il bot
+async def run_bot():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     webhook_url = "https://telegram-2m17.onrender.com/webhook"
 
     logger.info(f"Imposto webhook su {webhook_url}")
-    
-    await application.initialize()
+
+    await application.initialize()  # 🔥 Fix principale: inizializza prima l'app
     await application.bot.set_webhook(url=webhook_url)
     await application.start()
 
-# 🔹 Avvia tutto
+# 🔹 Avvia il server e il bot in parallelo
+async def main():
+    await run_bot()
+    config = uvicorn.Config(app, host="0.0.0.0", port=5000, loop="asyncio")
+    server = uvicorn.Server(config)
+    await server.serve()
+
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    loop.run_until_complete(main())
-
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    asyncio.run(main())  # 🔥 Fix: usa asyncio.run() per garantire l'ordine corretto
