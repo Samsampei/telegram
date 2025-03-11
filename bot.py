@@ -30,6 +30,11 @@ app = Quart(__name__)
 # Crea l'applicazione per il bot di Telegram
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
+@app.route("/", methods=["GET"])
+async def home():
+    """Risponde alle richieste sulla root del server."""
+    return "Bot Telegram attivo! 🚀", 200
+
 @app.route('/webhook', methods=['POST'])
 async def webhook():
     """Gestisce gli aggiornamenti ricevuti dal webhook di Telegram."""
