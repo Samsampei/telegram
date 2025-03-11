@@ -27,7 +27,7 @@ openai.api_key = OPENAI_API_KEY
 app = Quart(__name__)
 
 # Crea l'applicazione per il bot di Telegram
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+application = None  # Non inizializzare subito
 
 @app.route("/", methods=["GET"])
 async def home():
@@ -39,11 +39,11 @@ async def webhook():
         update_json = await request.get_json()
         update = Update.de_json(update_json, application.bot)
         logger.debug(f"Received update: {update}")
-        
+
         # Assicura che l'applicazione sia inizializzata correttamente
         if not application.running:
             await application.initialize()
-        
+
         await application.process_update(update)
         return 'OK', 200
     except Exception as e:
@@ -79,6 +79,9 @@ signal.signal(signal.SIGTERM, shutdown_handler)
 
 # Funzione principale
 async def main():
+    global application  # Usa la variabile globale
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     
