@@ -18,7 +18,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not TELEGRAM_BOT_TOKEN:
     raise ValueError("Il token TELEGRAM_BOT_TOKEN non è stato trovato!")
-
 if not OPENAI_API_KEY:
     raise ValueError("Il token OPENAI_API_KEY non è stato trovato!")
 
@@ -32,17 +31,20 @@ application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 @app.route("/", methods=["GET"])
 async def home():
-    """Risponde alle richieste sulla root del server."""
     return "Bot Telegram attivo! 🚀", 200
 
 @app.route('/webhook', methods=['POST'])
 async def webhook():
-    """Gestisce gli aggiornamenti ricevuti dal webhook di Telegram."""
     try:
         update_json = await request.get_json()
         update = Update.de_json(update_json, application.bot)
-        logger.debug(f"Received update: {update}")  
-        await application.process_update(update)  # Elaborazione dell'update
+        logger.debug(f"Received update: {update}")
+        
+        # Assicura che l'applicazione sia inizializzata correttamente
+        if not application.running:
+            await application.initialize()
+        
+        await application.process_update(update)
         return 'OK', 200
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")
@@ -67,19 +69,27 @@ async def chat(update: Update, context):
         logging.error(f"Errore con OpenAI: {str(e)}")  
         await update.message.reply_text(f"Errore: {str(e)}")
 
+# Gestore dei segnali per Render
+def shutdown_handler(signum, frame):
+    logger.info("Spegnimento in corso...")
+    asyncio.create_task(application.shutdown())
+    os._exit(0)
+
+signal.signal(signal.SIGTERM, shutdown_handler)
+
 # Funzione principale
 async def main():
-    """Inizializza e avvia il bot in modalità webhook"""
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-
+    
     # Imposta il webhook
     webhook_url = "https://telegram-2m17.onrender.com/webhook"
+    await application.initialize()
     await application.bot.set_webhook(url=webhook_url)
     logger.info(f"Webhook impostato su {webhook_url}")
-
+    
     # Avvia Quart
     app.run(host="0.0.0.0", port=5000)
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Avvia il bot in modo asincrono
+    asyncio.run(main())
