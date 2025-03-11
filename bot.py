@@ -91,3 +91,13 @@ asyncio.create_task(main())
 
 # Avvia Quart (Render lo tiene attivo)
 app.run(host="0.0.0.0", port=5000)
+
+import uvicorn
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())  # Assicura che il bot venga avviato correttamente
+
+    # Avvia il server web
+    uvicorn.run(app, host="0.0.0.0", port=5000)
+
