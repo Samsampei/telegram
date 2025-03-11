@@ -73,8 +73,10 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
     webhook_url = "https://telegram-2m17.onrender.com/webhook"
-    await application.initialize()
-    await application.bot.set_webhook(url=webhook_url)
+    await application.initialize()  # 👈 AGGIUNGI QUESTA RIGA!
+    await application.start()
+    await application.updater.start_polling()  # 👈 Usa Polling per test locale (evita webhook)
+    await application.stop()
     logger.info(f"Webhook impostato su {webhook_url}")
 
     # Avvia Quart con Hypercorn
